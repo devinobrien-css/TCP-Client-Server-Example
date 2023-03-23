@@ -8,7 +8,20 @@
 #define MAX_LINE_LENGTH 2048
 #define MAX_PENDING 5
 
-void handle_client(int client_sock, FILE *fp) {
+/* Reads in request from client and exports to file
+ *  params:
+ *     sock - the file descriptor for the server socket 
+ */
+void handle_client_request(int client_sock) {
+    // open specified file for reading
+    FILE *fp = fopen(filename, "r");
+    if (!fp) {
+        perror("fopen() failed");
+        exit(1);
+    }
+    printf("Server: output file successfully opened\n");
+
+    // read from file, write to client socket
     char line[MAX_LINE_LENGTH];
     while (fgets(line, MAX_LINE_LENGTH, fp)) {
         send(client_sock, line, strlen(line), 0);
@@ -18,18 +31,23 @@ void handle_client(int client_sock, FILE *fp) {
     close(client_sock);
 }
 
+/* Client Driver Program
+ */
 int main(int argc, char *argv[]) {
+    // verify usage
     if (argc != 2) {
         fprintf(stderr, "Usage: %s <port>\n", argv[0]);
         exit(1);
     }
     int port = atoi(argv[1]);
 
+    // build socket on given port
     int server_sock = socket(AF_INET, SOCK_STREAM, 0);
     if (server_sock < 0) {
         perror("socket() failed");
         exit(1);
     }
+    printf("Server: socket built for port %s\n", argv[1]);
 
     struct sockaddr_in server_addr;
     memset(&server_addr, 0, sizeof(server_addr));
@@ -37,25 +55,34 @@ int main(int argc, char *argv[]) {
     server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
     server_addr.sin_port = htons(port);
 
+    // bind socket on local host
     if (bind(server_sock, (struct sockaddr*)&server_addr, sizeof(server_addr)) < 0) {
         perror("bind() failed");
         exit(1);
     }
+    printf("Server: socket opened on port %s of localhost\n", argv[1]);
 
+    // begin listening
     if (listen(server_sock, MAX_PENDING) < 0) {
         perror("listen() failed");
         exit(1);
     }
+    printf("Server: listening...\n");
 
+    // loop to accept consecutive client requests
     while (1) {
         struct sockaddr_in client_addr;
         unsigned int client_len = sizeof(client_addr);
+
+        // accept a client connection
         int client_sock = accept(server_sock, (struct sockaddr*)&client_addr, &client_len);
         if (client_sock < 0) {
             perror("accept() failed");
             exit(1);
         }
+        printf("Server: connection accepted from client on socket %d", client_sock);
 
+        // read in input from client
         char filename[MAX_LINE_LENGTH];
         int bytes_recieved;
         if ((bytes_recieved = recv(client_sock, filename, MAX_LINE_LENGTH, 0)) <= 0) {
@@ -63,18 +90,11 @@ int main(int argc, char *argv[]) {
             exit(1);
         }
         filename[bytes_recieved] = '\0';
-        printf("Recieved:\n");
+        printf("Server: recieved data from the client\n");
         printf("%d\n",bytes_recieved);
         printf("%s\n",filename);
 
-        FILE *fp = fopen(filename, "r");
-        if (!fp) {
-            perror("fopen() failed");
-            exit(1);
-        }
-
-        handle_client(client_sock, fp);
+        handle_client_request(client_sock)
     }
-
     return 0;
 }
