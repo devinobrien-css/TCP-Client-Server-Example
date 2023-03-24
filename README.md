@@ -6,7 +6,7 @@ This repository holds a demonstration of TCP communication established between a
 
 ## Prerequisites
 
-In order to execute the code in this repository, you must have a recent version  of the Gnu Compiler Collection installed on your computer. a reference to download (can be found here)[https://gcc.gnu.org/install/]
+In order to execute the code in this repository, you must have a recent version  of the Gnu Compiler Collection installed on your computer. a reference to download [can be found here](https://gcc.gnu.org/install/)
 
 Please note, C programs do not run identical across environments. This application may attempt to perform system/network actions that are prohibited by the permissions set of your OS.
 
