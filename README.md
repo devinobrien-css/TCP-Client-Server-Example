@@ -2,7 +2,7 @@
 
 ## Repository Overview
 
-This repository holds a demonstration of TCP communication established between a server and client. The server is a persistent program that should be started prior to client execution. Once the server is listening, the client can ping the server over an available port. The client program first takes a filename in the CWD as input to include in the request to the server. The server recieves this request, opens the file and writes the content back to the client. The client recieves the response and outputs it to a `.txt` file.
+This repository holds a demonstration of TCP communication established between a server and client. The server is a persistent program that should be started prior to client execution. Once the server is listening, the client can ping the server over an available port. The client program takes a filename in the CWD as input to include in the request to the server. The server recieves this request, opens the file and writes the content back to the client. The client recieves the response and outputs it to a `.txt` file.
 
 ## Prerequisites
 

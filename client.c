@@ -5,9 +5,7 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 
-#define MAX_LINE_LENGTH 1024
-
-
+#define MAX_LINE_LENGTH 128
 
 /* Reads in response from server and exports to file
  *  params:
@@ -21,26 +19,28 @@ void handle_server_response(int sock) {
         exit(1);
     }  
 
-    char line[MAX_LINE_LENGTH];
+    char file_buff[MAX_LINE_LENGTH];
     int count = 0;
-    
+
     // print response from server to file
-    while (recv(sock, line, MAX_LINE_LENGTH, 0) > 0) {
-        printf("%s\n", line)
-        if (strcmp(line, "$") == 0) {
-            break;
-        }
-        fprintf(fp, "%s", line);
+    while (recv(sock, file_buff, MAX_LINE_LENGTH, 0) > 0) {
+        printf("Client: response recieved server\n");
+        
+        fprintf(fp, "%s", file_buff);
         count++;
         if (count % 4 == 0) {
             send(sock, "Received messages up to $\n", 27, 0);
+        }
+        if (strchr(file_buff, '$') != NULL) {
+            printf("Client: end of string detected");
+            break;
         }
     }
     fclose(fp);
     close(sock);
 }
 
-/* Client Driver Program
+/* TCP Client Driver
  */
 int main(int argc, char *argv[]) {
     // verify usage
@@ -72,12 +72,14 @@ int main(int argc, char *argv[]) {
         perror("connect() failed");
         exit(1);
     }
+    printf("Client: connected to server\n");
 
     // send request to server
     if (send(sock, filename, strlen(filename), 0) < 0) {
         perror("send() failed");
         exit(1);
     }
+    printf("Client: send request to server\n");
 
     handle_server_response(sock);
 

@@ -5,14 +5,14 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 
-#define MAX_LINE_LENGTH 2048
+#define MAX_LINE_LENGTH 128
 #define MAX_PENDING 5
 
 /* Reads in request from client and exports to file
  *  params:
  *     sock - the file descriptor for the server socket 
  */
-void handle_client_request(int client_sock) {
+void handle_client_request(int client_sock,  char* filename) {
     // open specified file for reading
     FILE *fp = fopen(filename, "r");
     if (!fp) {
@@ -27,11 +27,16 @@ void handle_client_request(int client_sock) {
         send(client_sock, line, strlen(line), 0);
     }
     send(client_sock, "$", 1, 0);
+    printf("Successfully outputed to socket\n");
+
     fclose(fp);
+    printf("Server: file closed\n");
+
     close(client_sock);
+    printf("Server: socket closed\n");
 }
 
-/* Client Driver Program
+/* TCP Server Driver 
  */
 int main(int argc, char *argv[]) {
     // verify usage
@@ -48,7 +53,6 @@ int main(int argc, char *argv[]) {
         exit(1);
     }
     printf("Server: socket built for port %s\n", argv[1]);
-
     struct sockaddr_in server_addr;
     memset(&server_addr, 0, sizeof(server_addr));
     server_addr.sin_family = AF_INET;
@@ -83,18 +87,19 @@ int main(int argc, char *argv[]) {
         printf("Server: connection accepted from client on socket %d", client_sock);
 
         // read in input from client
-        char filename[MAX_LINE_LENGTH];
+        char body[MAX_LINE_LENGTH];
         int bytes_recieved;
-        if ((bytes_recieved = recv(client_sock, filename, MAX_LINE_LENGTH, 0)) <= 0) {
+        if ((bytes_recieved = recv(client_sock, body, MAX_LINE_LENGTH, 0)) <= 0) {
             perror("recv() failed");
             exit(1);
         }
-        filename[bytes_recieved] = '\0';
-        printf("Server: recieved data from the client\n");
-        printf("%d\n",bytes_recieved);
-        printf("%s\n",filename);
+        body[bytes_recieved] = '\0';
 
-        handle_client_request(client_sock)
+        printf("Server: recieved data from the client\n");
+        printf("Bytes recieved: %d\n",bytes_recieved);
+        printf("Body: %s\n",body);
+
+        handle_client_request(client_sock,body);
     }
     return 0;
 }
